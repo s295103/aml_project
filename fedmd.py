@@ -174,7 +174,7 @@ class Server():
         self.test_set = test_set
         self.priv_train_epochs = priv_train_epochs
         self.dataset_size = dataset_size
-        self.train_set = sample_dataset(train_set, size=self.dataset_size)
+        self.train_set = train_set
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
@@ -204,7 +204,8 @@ class Server():
         return self.stats
 
     def coop_step(self):
-        tr_dl = DataLoader(self.train_set, self.batch_size, shuffle=True, num_workers=self.num_workers)
+        sampled_train_set = sample_dataset(self.train_set, size=self.dataset_size)
+        tr_dl = DataLoader(sampled_train_set, self.batch_size, shuffle=True, num_workers=self.num_workers)
         for x, _ in tr_dl:
             logits = torch.zeros(1).to(self.device) # Communication to the server + aggregation
             for c in self.clients.values(): 
