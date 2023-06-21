@@ -107,11 +107,11 @@ class Client():
             
             if self.scheduler is not None:
                 self.scheduler.step()
-
-            print(f"Epoch {e}, loss = {sum_loss}")
+            avg_loss = sum_loss / len(tr_dl)
+            print(f"Epoch {e}, avg_loss = {avg_loss}")
         acc = self.testing(test_set)
         print(f"{self.name} accuracy = {100*acc:.1f} %")
-        return sum_loss, acc
+        return avg_loss, acc
     
     def predict_consensus(self, x:torch.Tensor) -> torch.Tensor:
         self.model.train(True)
