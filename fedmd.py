@@ -98,10 +98,8 @@ class Client():
                 self.optimizer.zero_grad()
 
                 y_pred = self.model(x)
-                print(y_pred)
 
                 loss = self.criterion(y_pred, y)
-                print(sum_loss, loss)
                 sum_loss += loss.item()
 
                 loss.backward()
@@ -183,8 +181,11 @@ class Server():
                 logits = logits + c.predict_consensus(x).to(self.device) 
             
             mean = logits / self.num_clients 
-            for c in self.clients.values(): # Server distributes consensus to the clients
+            for n, c in self.clients.items(): # Server distributes consensus to the clients
                 c.digest_consensus(mean.detach())  # Client digest consesus
+                for p in c.model.parameters():
+                    if torch.any(torch.isnan(p)):
+                        raise Exception(f"Error: client {n} has NaN parameters")
 
     def ind_step(self, round:int):
         for i, c in enumerate(self.clients.values()):
