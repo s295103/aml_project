@@ -136,19 +136,13 @@ class Client():
     def digest_consensus(self, target:torch.Tensor, coop_lr:float) -> None:
         if target.size() != self.prediction.size():
             raise Exception(f"Error: target size {target.size()} and prediction size {self.prediction.size()} must match")
-        # Save the client's private lr
-        priv_lr = self.optimizer.param_groups[0]['lr']
-        self.optimizer.param_groups[0]['lr'] = coop_lr
-        
         # Backward pass
         target = target.to(self.device)
         loss = self.criterion(self.prediction, target) 
         loss.backward()
         self.optimizer.step()
-
-        # Reset last prediction and lr
+        # Reset last prediction
         self.prediction = None
-        self.optimizer.param_groups[0]['lr'] = priv_lr
 
 
 class Server():
@@ -157,9 +151,9 @@ class Server():
             train_set: Dataset, 
             test_set:Dataset, 
             num_classes_pr_data:int,
-            lr:float,
             max_rounds: int = 1_000, 
-            priv_train_epochs:int=50, 
+            priv_train_epochs:int=25, 
+            pub_train_epochs:int=5, 
             dataset_size: int = 10_000, 
             batch_size:int=128, 
             num_workers:int=8, 
@@ -169,10 +163,10 @@ class Server():
         self.clients = clients
         self.num_clients = len(clients)
         self.num_classes_pr_data = num_classes_pr_data
-        self.lr = lr
         self.max_rounds = max_rounds
         self.test_set = test_set
         self.priv_train_epochs = priv_train_epochs
+        self.pub_train_epochs = pub_train_epochs
         self.dataset_size = dataset_size
         self.train_set = train_set
         self.batch_size = batch_size
@@ -195,7 +189,8 @@ class Server():
         try:
             for r in range(min_round, self.max_rounds):
                 print(f"Round {r}")
-                self.coop_step()
+                for _ in range(self.pub_train_epochs):
+                    self.coop_step()
                 self.ind_step(r)
         except KeyboardInterrupt:
             print(f"Training interrupted at round {r}")
