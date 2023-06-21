@@ -99,26 +99,29 @@ class Client():
     def private_training(self, num_epochs:int, test_set:Dataset) -> tuple[float, float]:
         tr_dl = DataLoader(self.private_data, self.batch_size, True, num_workers=self.num_workers)
         print(f"{self.name} private training")
-        for e in range(num_epochs):
-            sum_loss = 0
-            self.model.train(True)
-            for x, y in tr_dl:
-                x = x.to(self.device)
-                y = y.to(self.device)
-                self.optimizer.zero_grad()
+        try:
+            for e in range(num_epochs):
+                sum_loss = 0
+                self.model.train(True)
+                for x, y in tr_dl:
+                    x = x.to(self.device)
+                    y = y.to(self.device)
+                    self.optimizer.zero_grad()
 
-                y_pred = self.model(x)
+                    y_pred = self.model(x)
 
-                loss = self.criterion(y_pred, y)
-                sum_loss += loss.item()
+                    loss = self.criterion(y_pred, y)
+                    sum_loss += loss.item()
 
-                loss.backward()
-                self.optimizer.step()
-            
-            if self.scheduler is not None:
-                self.scheduler.step()
-            avg_loss = sum_loss / len(tr_dl)
-            print(f"Epoch {e}, avg_loss = {avg_loss}")
+                    loss.backward()
+                    self.optimizer.step()
+                
+                if self.scheduler is not None:
+                    self.scheduler.step()
+                avg_loss = sum_loss / len(tr_dl)
+                print(f"Epoch {e}, avg_loss = {avg_loss}")
+        except KeyboardInterrupt:
+            print(f"Private training interrupted at epoch {e}")
         acc = self.testing(test_set)
         print(f"{self.name} accuracy = {100*acc:.1f} %")
         return avg_loss, acc
