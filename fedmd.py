@@ -100,9 +100,8 @@ class Client():
                 y_pred = self.model(x)
 
                 loss = self.criterion(y_pred, y)
-                print(sum_loss)
+                print(sum_loss, loss.item())
                 sum_loss += loss.item()
-                print(sum_loss)
 
                 loss.backward()
                 self.optimizer.step()
