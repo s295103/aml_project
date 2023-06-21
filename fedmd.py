@@ -133,7 +133,7 @@ class Client():
         self.prediction = self.model(x)
         return self.prediction
 
-    def digest_consensus(self, target:torch.Tensor, coop_lr:float) -> None:
+    def digest_consensus(self, target:torch.Tensor) -> None:
         if target.size() != self.prediction.size():
             raise Exception(f"Error: target size {target.size()} and prediction size {self.prediction.size()} must match")
         # Backward pass
@@ -208,7 +208,7 @@ class Server():
             
             mean = logits / self.num_clients 
             for n, c in self.clients.items(): # Server distributes consensus to the clients
-                c.digest_consensus(mean.detach(), self.lr)  # Client digest consesus
+                c.digest_consensus(mean.detach())  # Client digest consesus
                 for p in c.model.parameters():
                     if torch.any(torch.isnan(p)):
                         raise Exception(f"Error: client {n} has NaN parameters")
