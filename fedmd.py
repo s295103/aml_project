@@ -110,7 +110,7 @@ class Client():
 
             print(f"Epoch {e}, loss = {sum_loss}")
         acc = self.testing(test_set)
-        print(f"{self.name} accuracy = {100*acc:.1f}")
+        print(f"{self.name} accuracy = {100*acc:.1f} %")
         return sum_loss, acc
     
     def predict_consensus(self, x:torch.Tensor) -> torch.Tensor:
