@@ -1,0 +1,11 @@
+cifar-100-python.tar.gz
+cifar-100-python
+cifar-10-python.tar.gz
+cifar-10-batches-py
+__pycache__
+code/cifar*
+code/__pycache__
+caltech101
+code/test*
+test*
+papers
