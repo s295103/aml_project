@@ -133,16 +133,23 @@ class Client():
         self.prediction = self.model(x)
         return self.prediction
 
-    def digest_consensus(self, target:torch.Tensor) -> None:
+    def digest_consensus(self, target:torch.Tensor, coop_lr:float) -> None:
         if target.size() != self.prediction.size():
             raise Exception(f"Error: target size {target.size()} and prediction size {self.prediction.size()} must match")
+        
+        # Swap private and cooperative training learning rate 
+        pr_lr = self.optimizer.param_groups[0]["lr"]
+        self.optimizer.param_groups[0]["lr"] = coop_lr
+        
         # Backward pass
         target = target.to(self.device)
         loss = self.criterion(self.prediction, target) 
         loss.backward()
         self.optimizer.step()
-        # Reset last prediction
+        
+        # Reset last prediction and lr
         self.prediction = None
+        self.optimizer.param_groups[0]["lr"] = pr_lr
 
 
 class Server():
@@ -151,7 +158,8 @@ class Server():
             train_set: Dataset, 
             test_set:Dataset, 
             num_classes_pr_data:int,
-            max_rounds: int = 1_000, 
+            lr:float,
+            max_rounds: int = 100, 
             priv_train_epochs:int=25, 
             pub_train_epochs:int=5, 
             dataset_size: int = 10_000, 
@@ -164,6 +172,7 @@ class Server():
         self.num_clients = len(clients)
         self.num_classes_pr_data = num_classes_pr_data
         self.max_rounds = max_rounds
+        self.lr = lr
         self.test_set = test_set
         self.priv_train_epochs = priv_train_epochs
         self.pub_train_epochs = pub_train_epochs
@@ -191,7 +200,7 @@ class Server():
                 print(f"Round {r}")
                 for _ in range(self.pub_train_epochs):
                     self.coop_step()
-                self.ind_step(r)
+                    self.ind_step(r)
         except KeyboardInterrupt:
             print(f"Training interrupted at round {r}")
 
@@ -208,7 +217,7 @@ class Server():
             
             mean = logits / self.num_clients 
             for n, c in self.clients.items(): # Server distributes consensus to the clients
-                c.digest_consensus(mean.detach())  # Client digest consesus
+                c.digest_consensus(mean.detach(), self.lr)  # Client digest consesus
                 for p in c.model.parameters():
                     if torch.any(torch.isnan(p)):
                         raise Exception(f"Error: client {n} has NaN parameters")
