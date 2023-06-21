@@ -186,7 +186,7 @@ class Server():
 
     def coop_training(self) -> dict:
         # Check for resumed clients
-        last_rounds = [client.last_rounds for client in self.clients.values()]
+        last_rounds = [client.last_round for client in self.clients.values()]
         if any([l is None for l in last_rounds]): # If any client has not resumed from checkpoint, starts rounds from 0
             min_round = 0
         else: # If all clients have resumed from checkpoint, choose the minimum last round number
