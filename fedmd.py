@@ -4,7 +4,7 @@ import pickle
 from torch.utils.data import Dataset, Subset, DataLoader
 import torch.nn as nn
 import torch
-from utils import save_model
+from utils import save_model, load_model
 import os
 
 class Client():
@@ -40,7 +40,8 @@ class Client():
             momentum: float = 0.9,
             batch_size: int = 128,
             path: str = os.getcwd(),
-            num_workers: int = 8) -> None:
+            num_workers: int = 8, 
+            checkpoint_file_path:str=None) -> None:
 
         self.optimizer = optimizer
         self.criterion = criterion
@@ -52,6 +53,15 @@ class Client():
         self.batch_size = batch_size
         self.path = path
         self.num_workers = num_workers
+
+        # Resume from checkpoint
+        if checkpoint_file_path is not None and \
+            os.path.isfile(checkpoint_file_path):
+            model_data = load_model(checkpoint_file_path)
+            self.model.load_state_dict(model_data["weights"])
+            self.last_round = model_data["epoch"]
+        else:
+            self.last_round = None
 
         self.max_accuracy = 0
         self.model.to(device) 
@@ -172,8 +182,15 @@ class Server():
         )
 
     def coop_training(self) -> dict:
+        # Check for resumed clients
+        last_rounds = [client.last_rounds for client in self.clients.values()]
+        if any([l is None for l in last_rounds]): # If any client has not resumed from checkpoint, starts rounds from 0
+            min_round = 0
+        else: # If all clients have resumed from checkpoint, choose the minimum last round number
+            min_round = min(last_rounds)
+                
         try:
-            for r in range(self.max_rounds):
+            for r in range(min_round, self.max_rounds):
                 print(f"Round {r}")
                 self.coop_step()
                 self.ind_step(r)
