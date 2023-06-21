@@ -100,6 +100,7 @@ class Client():
                 y_pred = self.model(x)
 
                 loss = self.criterion(y_pred, y)
+                print(sum_loss)
                 sum_loss += loss.item()
                 print(sum_loss)
 
