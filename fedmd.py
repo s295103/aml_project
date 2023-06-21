@@ -19,6 +19,8 @@ class Client():
         self.optimizer = None
         self.criterion = None
         self.scheduler = None
+        self.scheduler_kwargs = None
+        self.scheduler_obj = None
         self.device = None
         self.lr = None
         self.weigt_decay = None
@@ -34,6 +36,7 @@ class Client():
             optimizer: optim.Optimizer,
             criterion: nn.Module,
             scheduler: optim.lr_scheduler.LRScheduler = None,
+            scheduler_kwargs:dict=None,
             device: str = "cuda" if torch.cuda.is_available() else "cpu",
             lr: float = 0.1,
             weight_decay: float = 1e-4,
@@ -45,7 +48,10 @@ class Client():
 
         self.optimizer = optimizer
         self.criterion = criterion
-        self.scheduler = scheduler
+        if scheduler_kwargs is not None and scheduler is not None:
+            self.scheduler_kwargs = scheduler_kwargs
+            self.scheduler_obj = scheduler
+            self.scheduler = self.scheduler_obj(**self.scheduler_kwargs)
         self.device = device
         self.lr = lr
         self.weigt_decay = weight_decay
@@ -122,8 +128,14 @@ class Client():
                 print(f"Epoch {e}, avg_loss = {avg_loss}")
         except KeyboardInterrupt:
             print(f"Private training interrupted at epoch {e}")
+        
+        # Testing
         acc = self.testing(test_set)
         print(f"{self.name} accuracy = {100*acc:.1f} %")
+        
+        # Reset scheduler
+        self.scheduler = self.scheduler_obj(**self.scheduler_kwargs)
+
         return avg_loss, acc
     
     def predict_consensus(self, x:torch.Tensor) -> torch.Tensor:
