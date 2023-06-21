@@ -101,6 +101,7 @@ class Client():
 
                 loss = self.criterion(y_pred, y)
                 sum_loss += loss.item()
+                print(sum_loss)
 
                 loss.backward()
                 self.optimizer.step()
