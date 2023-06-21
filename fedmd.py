@@ -134,7 +134,10 @@ class Client():
         print(f"{self.name} accuracy = {100*acc:.1f} %")
         
         # Reset scheduler
-        self.scheduler = self.scheduler_obj(**self.scheduler_kwargs)
+        if self.scheduler is not None and \
+            self.scheduler_obj is not None and \
+                self.scheduler_kwargs is not None:
+            self.scheduler = self.scheduler_obj(**self.scheduler_kwargs)
 
         return avg_loss, acc
     
