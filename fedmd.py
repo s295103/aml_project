@@ -98,6 +98,7 @@ class Client():
                 self.optimizer.zero_grad()
 
                 y_pred = self.model(x)
+                print(y_pred)
 
                 loss = self.criterion(y_pred, y)
                 print(sum_loss, loss)
