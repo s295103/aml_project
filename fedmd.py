@@ -229,11 +229,12 @@ class Server():
             logits = torch.zeros(1).to(self.device).detach() # Communication to the server + aggregation
             for c in self.clients.values(): 
                 logits = logits + c.predict_consensus(x).to(self.device)
-            mean = logits / self.num_clients                
-            var = 0
-            for c in self.clients.values():
-                var = var + torch.square(mean-c.prediction)
-            print(f"Logits avg std = {torch.mean(torch.sqrt(var)).item()}")
+            mean = logits / self.num_clients  
+            ## This to show that logits variance blows up              
+            # var = 0
+            # for c in self.clients.values():
+            #     var = var + torch.square(mean-c.prediction)
+            # print(f"Logits avg std = {torch.mean(torch.sqrt(var)).item()}")
             for n, c in self.clients.items(): # Server distributes consensus to the clients
                 c.digest_consensus(mean.detach(), self.lr)  # Client digest consesus
                 for p in c.model.parameters():
