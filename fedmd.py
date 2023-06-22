@@ -226,11 +226,13 @@ class Server():
         sampled_train_set = sample_dataset(self.train_set, size=self.dataset_size)
         tr_dl = DataLoader(sampled_train_set, self.batch_size, shuffle=True, num_workers=self.num_workers)
         for x, _ in tr_dl:
-            logits = torch.zeros(1).to(self.device) # Communication to the server + aggregation
+            logits = 0 # Communication to the server + aggregation
             for c in self.clients.values(): 
-                logits = logits + c.predict_consensus(x).to(self.device) 
+                logits = logits + c.predict_consensus(x).to(self.device).item()
             
-            mean = logits / self.num_clients 
+            mean = logits / self.num_clients
+            std = torch.sqrt(torch.sum([torch.square(mean-c.prediction) for c in self.clients.values()]))
+            print(f"Logits std = {std}")
             for n, c in self.clients.items(): # Server distributes consensus to the clients
                 c.digest_consensus(mean.detach(), self.lr)  # Client digest consesus
                 for p in c.model.parameters():
