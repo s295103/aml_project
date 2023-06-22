@@ -231,7 +231,7 @@ class Server():
                 logits = logits + c.predict_consensus(x).to(self.device)
             
             mean = logits / self.num_clients
-            std = torch.sqrt(torch.sum([torch.square(mean-c.prediction) for c in self.clients.values()]))
+            std = torch.sqrt(torch.sum(torch.Tensor([torch.square(mean-c.prediction) for c in self.clients.values()])))
             print(f"Logits std = {std}")
             for n, c in self.clients.items(): # Server distributes consensus to the clients
                 c.digest_consensus(mean.detach(), self.lr)  # Client digest consesus
