@@ -226,7 +226,7 @@ class Server():
         sampled_train_set = sample_dataset(self.train_set, size=self.dataset_size)
         tr_dl = DataLoader(sampled_train_set, self.batch_size, shuffle=True, num_workers=self.num_workers)
         for x, _ in tr_dl:
-            logits = 0 # Communication to the server + aggregation
+            logits = torch.zeros(1).to(self.device).detach() # Communication to the server + aggregation
             for c in self.clients.values(): 
                 logits = logits + c.predict_consensus(x).to(self.device).item()
             
