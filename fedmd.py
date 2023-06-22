@@ -228,7 +228,7 @@ class Server():
         for x, _ in tr_dl:
             logits = torch.zeros(1).to(self.device).detach() # Communication to the server + aggregation
             for c in self.clients.values(): 
-                logits = logits + c.predict_consensus(x).to(self.device).item()
+                logits = logits + c.predict_consensus(x).to(self.device)
             
             mean = logits / self.num_clients
             std = torch.sqrt(torch.sum([torch.square(mean-c.prediction) for c in self.clients.values()]))
