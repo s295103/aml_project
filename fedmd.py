@@ -157,7 +157,7 @@ class Client():
         self.optimizer.param_groups[0]["lr"] = coop_lr
         
         # Backward pass
-        target = target.to(self.device)
+        target = nn.Softmax(dim=1)(target.to(self.device))
         loss = self.criterion(self.prediction, target) 
         loss.backward()
         self.optimizer.step()
