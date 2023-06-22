@@ -61,7 +61,7 @@ def model_size(net: nn.Module) -> int:
         tot_size += param.size()[0]
     return tot_size
 
-def _make_checkpoint(net:nn.Module, path:str, epoch:int=None, accuracy:float=None, lr:float=None, verbose=False) -> None:
+def make_checkpoint(net:nn.Module, path:str, epoch:int=None, accuracy:float=None, lr:float=None, verbose=False) -> None:
     save_model(net, path, epoch, accuracy, lr)
     if verbose:
         print(f"Checkpoint at epoch {epoch} saved at path {path} ")
@@ -265,7 +265,7 @@ def training(
                 old_checkpoint = f"{filename}_checkpoint_{epoch-1}.pth"
                 if os.path.isfile(old_checkpoint):
                     os.remove(old_checkpoint)
-            _make_checkpoint(net, path=new_checkpoint, epoch=epoch, accuracy=None, lr=scheduler.get_last_lr()[-1])
+            make_checkpoint(net, path=new_checkpoint, epoch=epoch, accuracy=None, lr=scheduler.get_last_lr()[-1])
 
             # Compute accuracy
             if epoch == 1 or (epoch % test_freq) == 0 or (num_epochs > 0 and num_epochs - epoch <= 10):
